@@ -11,12 +11,26 @@
   <img src="https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square" alt="License">
 </p>
 
+<p align="center">
+  <img src="assets/demo.gif" alt="CursorPulse Live Demo" width="460">
+</p>
+
 ---
 
 **CursorPulse** is a lightweight macOS menu bar application that displays a live companion badge next to your mouse pointer while AI coding agents are working. It lets you know at a glance whether your agent is actively generating code, awaiting tool approval, waiting for your input, or finished — across multiple tools and concurrent sessions.
 
 - **Zero Accessibility Permissions Required**: The companion badge is a non-activating, click-through overlay window that tracks the pointer using Quartz mouse events (`NSEvent.mouseLocation`). It never intercepts, inspects, or records input.
 - **Multi-Agent Awareness**: Seamlessly tracks multiple sessions across Antigravity, Claude Code, Cursor, Codex, and OpenCode, automatically cycling through active agents.
+
+---
+
+## Showcase
+
+| Main Overview & Active Sessions | 1-Click Agent Integrations |
+| :---: | :---: |
+| <img src="assets/menu-main.png" width="340" alt="Main Overview"> | <img src="assets/menu-integrations.png" width="340" alt="Agent Integrations"> |
+| **Cursor Companion Customization** | **Universal State Colors** |
+| <img src="assets/menu-cursor-companion.png" width="340" alt="Cursor Companion Settings"> | <img src="assets/menu-state-colors.png" width="340" alt="State Colors"> |
 
 ---
 
