@@ -42,6 +42,24 @@
 
 ---
 
+## Installation
+
+### Via Homebrew *(Recommended)*
+
+```bash
+brew install --cask hieuduy1751/tap/cursor-pulse
+```
+
+### Manual Download
+
+Download the latest `.dmg` or `.zip` installer from [GitHub Releases](https://github.com/hieuduy1751/cursor-pulse/releases/latest):
+
+- 🍏 **Apple Silicon (M1 / M2 / M3 / M4)**: [`CursorPulse-v0.1.0-mac-arm64.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.1.0/CursorPulse-v0.1.0-mac-arm64.dmg)
+- 💻 **Intel (x86_64)**: [`CursorPulse-v0.1.0-mac-x64.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.1.0/CursorPulse-v0.1.0-mac-x64.dmg)
+- ⚡️ **Universal (Dual Arch)**: [`CursorPulse-v0.1.0-mac-universal.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.1.0/CursorPulse-v0.1.0-mac-universal.dmg)
+
+---
+
 ## Supported AI Agents
 
 CursorPulse integrates via non-invasive Unix hooks and plugins with 1-click installation from the menu bar:
