@@ -5,10 +5,18 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/hieuduy1751/cursor-pulse/releases/latest">
+    <img src="https://img.shields.io/github/v/release/hieuduy1751/cursor-pulse?style=flat-square&color=blue" alt="Latest Release">
+  </a>
+  <img src="https://img.shields.io/badge/Architecture-Universal%20(ARM64%20%2B%20x86__64)-blueviolet?style=flat-square" alt="Universal Binary">
   <img src="https://img.shields.io/badge/macOS-14.0%2B-blue?style=flat-square&logo=apple" alt="macOS 14+">
   <img src="https://img.shields.io/badge/Swift-5.9%20%7C%206.0-orange?style=flat-square&logo=swift" alt="Swift">
   <img src="https://img.shields.io/badge/Zero%20Permissions-No%20Accessibility%20Required-success?style=flat-square" alt="Zero Permissions">
   <img src="https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square" alt="License">
+</p>
+
+<p align="center">
+  <a href="https://github.com/hieuduy1751/cursor-pulse/releases/latest"><strong>Download for macOS (Universal) ↓</strong></a>
 </p>
 
 <p align="center">
