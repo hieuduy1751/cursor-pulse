@@ -1,0 +1,20 @@
+# Swift Package Manager & Builds
+.build/
+.swiftpm/
+Packages/
+*.xcodeproj
+*.xcworkspace
+*.xcuserdata/
+DerivedData/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Local Session & Backup Artifacts
+.cursorpulse/
+*.cursorpulse.bak
