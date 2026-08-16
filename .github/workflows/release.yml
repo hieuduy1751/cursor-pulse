@@ -10,20 +10,18 @@ permissions:
 
 jobs:
   build:
-    name: Build Universal macOS App
+    name: Build & Package macOS App
     runs-on: macos-14
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Build Universal App
+      - name: Build & Package All Architectures
         run: |
-          ./scripts/build-app.sh
-          cd .build
-          zip -r -y "CursorPulse-${{ github.ref_name }}-macOS-universal.zip" CursorPulse.app
+          ./scripts/build-app.sh --package "${{ github.ref_name }}"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: .build/CursorPulse-${{ github.ref_name }}-macOS-universal.zip
+          files: .build/dist/*
           generate_release_notes: true
