@@ -1,13 +1,17 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-swift build -c release
+swift build -c release --arch arm64 --arch x86_64
+PRODUCTS_DIR=".build/apple/Products/Release"
+if [ ! -d "$PRODUCTS_DIR" ]; then
+	PRODUCTS_DIR=".build/release"
+fi
 APP=".build/CursorPulse.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp .build/release/CursorPulse "$APP/Contents/MacOS/CursorPulse"
-if [ -d ".build/release/CursorPulse_CursorPulse.bundle" ]; then
-	cp -R .build/release/CursorPulse_CursorPulse.bundle "$APP/Contents/Resources/"
+cp "$PRODUCTS_DIR/CursorPulse" "$APP/Contents/MacOS/CursorPulse"
+if [ -d "$PRODUCTS_DIR/CursorPulse_CursorPulse.bundle" ]; then
+	cp -R "$PRODUCTS_DIR/CursorPulse_CursorPulse.bundle" "$APP/Contents/Resources/"
 fi
 if [ -d "Sources/CursorPulse/Resources" ]; then
 	cp -R Sources/CursorPulse/Resources/* "$APP/Contents/Resources/"
