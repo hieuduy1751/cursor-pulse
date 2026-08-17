@@ -2,13 +2,20 @@ import SwiftUI
 
 @main
 enum CursorPulseMain {
+    private static var appDelegate: AppDelegate?
+
     static func main() {
         let args = Array(CommandLine.arguments.dropFirst())
         if let mode = args.first, ["--install", "--uninstall", "--status"].contains(mode) {
             runCLI(mode: mode, toolName: args.dropFirst().first)
             return
         }
-        CursorPulseApp.main()
+        let app = NSApplication.shared
+        let delegate = AppDelegate()
+        self.appDelegate = delegate
+        app.delegate = delegate
+        app.setActivationPolicy(.accessory)
+        app.run()
     }
 
     private static func runCLI(mode: String, toolName: String?) {
@@ -39,16 +46,6 @@ enum CursorPulseMain {
             print("\(installer.displayName): uninstalled")
         default:
             print("\(installer.tool): \(installer.isInstalled ? "installed" : "not installed")")
-        }
-    }
-}
-
-struct CursorPulseApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-
-    var body: some Scene {
-        Settings {
-            EmptyView()
         }
     }
 }

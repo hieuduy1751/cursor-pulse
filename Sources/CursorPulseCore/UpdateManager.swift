@@ -76,7 +76,7 @@ public final class UpdateManager: NSObject, URLSessionDownloadDelegate {
             self.currentVersion = currentVersion
         } else {
             let bundleVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
-            self.currentVersion = bundleVersion ?? "0.1.2"
+            self.currentVersion = bundleVersion ?? "0.1.3"
         }
         super.init()
     }

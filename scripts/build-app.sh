@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-VERSION="${2:-0.1.2}"
+VERSION="${2:-0.1.3}"
 VERSION_CLEAN="${VERSION#v}"
 PACKAGE_MODE="${1:-}"
 
