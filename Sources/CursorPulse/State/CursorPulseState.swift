@@ -76,6 +76,7 @@ final class CursorPulseState {
     let config: CursorConfig
     let launchAtLogin: LaunchAtLoginManager
     let window: BadgeWindow
+    let updater: UpdateManager
     private(set) var installers: [any ToolInstaller]
     private(set) var installedFlags: [String: Bool] = [:]
     private(set) var records: [SessionRecord] = []
@@ -105,6 +106,7 @@ final class CursorPulseState {
         launchAtLogin = LaunchAtLoginManager.shared
         window = BadgeWindow(colors: colors, config: config)
         tracker = CursorTracker(window: window)
+        updater = UpdateManager()
         let list: [any ToolInstaller] = [
             CodexInstaller(),
             ClaudeInstaller(),
@@ -131,6 +133,7 @@ final class CursorPulseState {
         }
         store.start()
         recompute()
+        updater.checkForUpdates()
     }
 
     func refreshInstallerStatus() {
