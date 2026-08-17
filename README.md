@@ -47,8 +47,12 @@
 ### Via Homebrew *(Recommended)*
 
 ```bash
-brew install --cask hieuduy1751/tap/cursor-pulse
+brew install --cask --no-quarantine hieuduy1751/tap/cursor-pulse
 ```
+
+> **Note**: Because CursorPulse is an open-source, ad-hoc signed app, macOS Gatekeeper may show a verification dialog on first open. You can bypass this by:
+> - Running: `xattr -dr com.apple.quarantine /Applications/CursorPulse.app`
+> - Or clicking **"Open Anyway"** in **System Settings > Privacy & Security**.
 
 ### Manual Download
 
