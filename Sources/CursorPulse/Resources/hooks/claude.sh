@@ -4,6 +4,7 @@ mode="$1"
 session="unknown"
 cwd=""
 tool_name=""
+is_foreign_caller="false"
 
 input_json=""
 if [ ! -t 0 ]; then
@@ -17,15 +18,39 @@ try:
     d = json.load(sys.stdin)
 except Exception:
     d = {}
-session_val = d.get("session_id") or d.get("sessionId") or d.get("conversation_id") or d.get("conversationId") or "unknown"
+
+# Check if this hook was invoked by Cursor / Antigravity / other IDEs importing Claude settings
+has_cursor_keys = bool(
+    d.get("hook_event_name") or 
+    d.get("hookEventName") or 
+    d.get("workspace_roots") or 
+    d.get("workspaceRoots") or 
+    d.get("generation_id") or 
+    d.get("generationId") or 
+    d.get("turn_id") or 
+    d.get("turnId") or 
+    (d.get("conversation_id") and not d.get("transcript_path"))
+)
+if has_cursor_keys:
+    print("is_foreign_caller=true")
+else:
+    print("is_foreign_caller=false")
+
+session_val = d.get("session_id") or d.get("sessionId") or "unknown"
 print("session=" + shlex.quote(str(session_val)))
-roots = d.get("workspacePaths") or d.get("workspace_roots") or []
-cwd_val = roots[0] if roots else (d.get("cwd") or d.get("workspace") or "")
+roots = d.get("workspacePaths") or []
+cwd_val = roots[0] if roots else (d.get("cwd") or "")
 print("cwd=" + shlex.quote(str(cwd_val)))
 tc = d.get("toolCall") or d.get("tool") or {}
 tname = tc.get("name") or d.get("tool_name") or ""
 print("tool_name=" + shlex.quote(str(tname)))
 ' 2>/dev/null)"
+fi
+
+# If invoked by Cursor or another IDE sharing Claude settings, ignore to prevent dual-tracking
+if [ "$is_foreign_caller" = "true" ]; then
+  echo '{"decision":"allow"}'
+  exit 0
 fi
 
 [ -z "$session" ] && session="unknown"
