@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-VERSION="${2:-0.1.1}"
+VERSION="${2:-0.1.2}"
 VERSION_CLEAN="${VERSION#v}"
 PACKAGE_MODE="${1:-}"
 
@@ -69,16 +69,26 @@ if [ "$PACKAGE_MODE" = "--package" ] || [ "$PACKAGE_MODE" = "package" ]; then
 	rm -rf "$DIST_DIR"
 	mkdir -p "$DIST_DIR"
 
-	create_bundle "arm64" ".build/CursorPulse-arm64.app"
-	(cd .build && zip -q -r -y "dist/CursorPulse-${VERSION}-mac-arm64.zip" CursorPulse-arm64.app)
-	hdiutil create -volname "CursorPulse" -srcfolder ".build/CursorPulse-arm64.app" -ov -format UDZO "$DIST_DIR/CursorPulse-${VERSION}-mac-arm64.dmg" -quiet
+	# Package arm64
+	rm -rf ".build/staging-arm64"
+	mkdir -p ".build/staging-arm64"
+	create_bundle "arm64" ".build/staging-arm64/CursorPulse.app"
+	(cd .build/staging-arm64 && zip -q -r -y "../dist/CursorPulse-${VERSION}-mac-arm64.zip" CursorPulse.app)
+	hdiutil create -volname "CursorPulse" -srcfolder ".build/staging-arm64" -ov -format UDZO "$DIST_DIR/CursorPulse-${VERSION}-mac-arm64.dmg" -quiet
 
-	create_bundle "x86_64" ".build/CursorPulse-x64.app"
-	(cd .build && zip -q -r -y "dist/CursorPulse-${VERSION}-mac-x64.zip" CursorPulse-x64.app)
-	hdiutil create -volname "CursorPulse" -srcfolder ".build/CursorPulse-x64.app" -ov -format UDZO "$DIST_DIR/CursorPulse-${VERSION}-mac-x64.dmg" -quiet
+	# Package x86_64
+	rm -rf ".build/staging-x64"
+	mkdir -p ".build/staging-x64"
+	create_bundle "x86_64" ".build/staging-x64/CursorPulse.app"
+	(cd .build/staging-x64 && zip -q -r -y "../dist/CursorPulse-${VERSION}-mac-x64.zip" CursorPulse.app)
+	hdiutil create -volname "CursorPulse" -srcfolder ".build/staging-x64" -ov -format UDZO "$DIST_DIR/CursorPulse-${VERSION}-mac-x64.dmg" -quiet
 
-	(cd .build && zip -q -r -y "dist/CursorPulse-${VERSION}-mac-universal.zip" CursorPulse.app)
-	hdiutil create -volname "CursorPulse" -srcfolder ".build/CursorPulse.app" -ov -format UDZO "$DIST_DIR/CursorPulse-${VERSION}-mac-universal.dmg" -quiet
+	# Package universal
+	rm -rf ".build/staging-universal"
+	mkdir -p ".build/staging-universal"
+	create_bundle "universal" ".build/staging-universal/CursorPulse.app"
+	(cd .build/staging-universal && zip -q -r -y "../dist/CursorPulse-${VERSION}-mac-universal.zip" CursorPulse.app)
+	hdiutil create -volname "CursorPulse" -srcfolder ".build/staging-universal" -ov -format UDZO "$DIST_DIR/CursorPulse-${VERSION}-mac-universal.dmg" -quiet
 
 	echo "Packaged releases in $DIST_DIR:"
 	ls -lh "$DIST_DIR"

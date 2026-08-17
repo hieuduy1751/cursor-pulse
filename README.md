@@ -54,9 +54,9 @@ brew install --cask hieuduy1751/tap/cursor-pulse
 
 Download the latest `.dmg` or `.zip` installer from [GitHub Releases](https://github.com/hieuduy1751/cursor-pulse/releases/latest):
 
-- 🍏 **Apple Silicon (M1 / M2 / M3 / M4)**: [`CursorPulse-v0.1.1-mac-arm64.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.1.1/CursorPulse-v0.1.1-mac-arm64.dmg)
-- 💻 **Intel (x86_64)**: [`CursorPulse-v0.1.1-mac-x64.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.1.1/CursorPulse-v0.1.1-mac-x64.dmg)
-- ⚡️ **Universal (Dual Arch)**: [`CursorPulse-v0.1.1-mac-universal.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.1.1/CursorPulse-v0.1.1-mac-universal.dmg)
+- 🍏 **Apple Silicon (M1 / M2 / M3 / M4)**: [`CursorPulse-v0.1.2-mac-arm64.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.1.2/CursorPulse-v0.1.2-mac-arm64.dmg)
+- 💻 **Intel (x86_64)**: [`CursorPulse-v0.1.2-mac-x64.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.1.2/CursorPulse-v0.1.2-mac-x64.dmg)
+- ⚡️ **Universal (Dual Arch)**: [`CursorPulse-v0.1.2-mac-universal.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.1.2/CursorPulse-v0.1.2-mac-universal.dmg)
 
 ---
 
