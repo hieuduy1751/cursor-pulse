@@ -1,5 +1,12 @@
 #!/bin/bash
-# CursorPulse hook for Claude Code — $1 = mode (working | pre_tool | stop | ready | idle | busy | needs_input | needs_approval).
+# CursorPulse hook for Claude Code / Claude Desktop — $1 = mode (working | pre_tool | stop | ready | idle | busy | needs_input | needs_approval).
+
+# 1. If invoked inside Cursor / VSCode / Superconductor environment, ignore completely.
+if [ -n "$CURSOR_PROJECT_DIR" ] || [ -n "$CURSOR_APP_VERSION" ] || [ -n "$CURSOR_VERSION" ] || [ -n "$CURSOR_USER_DATA_DIR" ] || [ -n "$SUPERCONDUCTOR_WORKTREE_PATH" ]; then
+  echo '{"decision":"allow"}'
+  exit 0
+fi
+
 mode="$1"
 session="unknown"
 cwd=""
@@ -29,9 +36,18 @@ has_cursor_keys = bool(
     d.get("generationId") or 
     d.get("turn_id") or 
     d.get("turnId") or 
-    (d.get("conversation_id") and not d.get("transcript_path"))
+    d.get("conversation_id") or
+    d.get("conversationId")
 )
-if has_cursor_keys:
+
+has_claude_keys = bool(
+    d.get("session_id") or
+    d.get("sessionId") or
+    d.get("transcript_path") or
+    d.get("entrypoint") == "claude-desktop"
+)
+
+if has_cursor_keys and not has_claude_keys:
     print("is_foreign_caller=true")
 else:
     print("is_foreign_caller=false")
