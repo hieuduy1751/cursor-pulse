@@ -1,7 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-VERSION="${2:-0.1.0}"
+VERSION="${2:-0.1.1}"
+VERSION_CLEAN="${VERSION#v}"
 PACKAGE_MODE="${1:-}"
 
 swift build -c release --arch arm64 --arch x86_64
@@ -29,7 +30,7 @@ create_bundle() {
 	if [ -d "Sources/CursorPulse/Resources" ]; then
 		cp -R Sources/CursorPulse/Resources/* "$output_app/Contents/Resources/"
 	fi
-	cat > "$output_app/Contents/Info.plist" <<'EOF'
+	cat > "$output_app/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -45,7 +46,7 @@ create_bundle() {
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.1.0</string>
+	<string>${VERSION_CLEAN}</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>LSMinimumSystemVersion</key>

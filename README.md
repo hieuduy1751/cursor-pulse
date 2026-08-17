@@ -54,9 +54,9 @@ brew install --cask hieuduy1751/tap/cursor-pulse
 
 Download the latest `.dmg` or `.zip` installer from [GitHub Releases](https://github.com/hieuduy1751/cursor-pulse/releases/latest):
 
-- 🍏 **Apple Silicon (M1 / M2 / M3 / M4)**: [`CursorPulse-v0.1.0-mac-arm64.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.1.0/CursorPulse-v0.1.0-mac-arm64.dmg)
-- 💻 **Intel (x86_64)**: [`CursorPulse-v0.1.0-mac-x64.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.1.0/CursorPulse-v0.1.0-mac-x64.dmg)
-- ⚡️ **Universal (Dual Arch)**: [`CursorPulse-v0.1.0-mac-universal.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.1.0/CursorPulse-v0.1.0-mac-universal.dmg)
+- 🍏 **Apple Silicon (M1 / M2 / M3 / M4)**: [`CursorPulse-v0.1.1-mac-arm64.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.1.1/CursorPulse-v0.1.1-mac-arm64.dmg)
+- 💻 **Intel (x86_64)**: [`CursorPulse-v0.1.1-mac-x64.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.1.1/CursorPulse-v0.1.1-mac-x64.dmg)
+- ⚡️ **Universal (Dual Arch)**: [`CursorPulse-v0.1.1-mac-universal.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.1.1/CursorPulse-v0.1.1-mac-universal.dmg)
 
 ---
 
@@ -67,8 +67,8 @@ CursorPulse integrates via non-invasive Unix hooks and plugins with 1-click inst
 | Agent | Platform | Detection Mechanism | State Events Tracked |
 |---|---|---|---|
 | **Antigravity** | IDE & AGY CLI | `~/.gemini/config/hooks.json` | `PreInvocation` (working), `PreToolUse` (needs approval / input), `PostToolUse` (working), `Stop` (ready / error) |
-| **Claude Code** | CLI | `~/.claude/settings.json` | `UserPromptSubmit` (working), `PreToolUse` (needs approval / input), `PostToolUse` (working), `Stop` (ready) |
-| **Cursor** | IDE & Agent | `~/.cursor/hooks.json` | `beforeSubmitPrompt` (working), `beforeShellExecution` (needs approval), `afterFileEdit` (working), `preToolUse` (needs approval), `stop` (ready) |
+| **Claude Code** | CLI | `~/.claude/settings.json` | `UserPromptSubmit` (working), `PreToolUse` (needs approval / input), `PostToolUse` (working), `Stop` (ready), `SessionEnd` (idle) |
+| **Cursor** | IDE & Agent | `~/.cursor/hooks.json` | `beforeSubmitPrompt` (working), `beforeShellExecution` (needs approval), `afterFileEdit` (working), `preToolUse` (needs approval), `stop` (ready), `sessionEnd` (idle) |
 | **Codex CLI** | CLI | `~/.codex/hooks.json` + `config.toml` auto-trust | `UserPromptSubmit`/`PostToolUse` (working), `PermissionRequest` (needs input), `Stop`/`SessionEnd` (ready / idle) |
 | **OpenCode** | CLI / Agent | `~/.config/opencode/plugins/cursorpulse.js` | `session.status` (working), `permission.asked` (needs approval), `session.idle` (ready / idle) |
 

@@ -171,7 +171,7 @@ struct MenuView: View {
                     .lineLimit(1)
                     .fixedSize(horizontal: true, vertical: false)
 
-                Text("v0.1.0 • AI Agent Tracker")
+                Text("v0.1.1 • AI Agent Tracker")
                     .font(.caption2)
                     .foregroundColor(.secondary)
                     .lineLimit(1)

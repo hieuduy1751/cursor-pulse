@@ -15,5 +15,9 @@ let package = Package(
             name: "cursorpulse-report",
             dependencies: ["CursorPulseCore"]
         ),
+        .testTarget(
+            name: "CursorPulseCoreTests",
+            dependencies: ["CursorPulseCore"]
+        ),
     ]
 )

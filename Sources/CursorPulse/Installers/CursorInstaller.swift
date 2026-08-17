@@ -27,6 +27,7 @@ struct CursorInstaller: ToolInstaller {
             "preToolUse": "\(hookPath) pre_tool",
             "postToolUse": "\(hookPath) working",
             "stop": "\(hookPath) ready",
+            "sessionEnd": "\(hookPath) idle",
         ]
     }
 

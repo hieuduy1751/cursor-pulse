@@ -1,4 +1,5 @@
 #!/bin/bash
+# CursorPulse hook for Claude Code — $1 = mode (working | pre_tool | stop | ready | idle | busy | needs_input | needs_approval).
 mode="$1"
 session="unknown"
 cwd=""
@@ -16,9 +17,11 @@ try:
     d = json.load(sys.stdin)
 except Exception:
     d = {}
-print("session=" + shlex.quote(str(d.get("session_id") or d.get("conversationId") or "unknown")))
-paths = d.get("workspacePaths") or []
-print("cwd=" + shlex.quote(paths[0] if paths else str(d.get("cwd") or "")))
+session_val = d.get("session_id") or d.get("sessionId") or d.get("conversation_id") or d.get("conversationId") or "unknown"
+print("session=" + shlex.quote(str(session_val)))
+roots = d.get("workspacePaths") or d.get("workspace_roots") or []
+cwd_val = roots[0] if roots else (d.get("cwd") or d.get("workspace") or "")
+print("cwd=" + shlex.quote(str(cwd_val)))
 tc = d.get("toolCall") or d.get("tool") or {}
 tname = tc.get("name") or d.get("tool_name") or ""
 print("tool_name=" + shlex.quote(str(tname)))
@@ -58,3 +61,7 @@ esac
 ts=$(date +%s)
 cat > "$file" <<EOF
 {"tool":"claude","state":"${state}","ts":${ts},"cwd":"${cwd}","session":"${session}"}
+EOF
+
+echo '{"decision":"allow"}'
+exit 0

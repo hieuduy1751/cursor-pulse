@@ -82,14 +82,28 @@ private let fsEventsCallback: FSEventStreamCallback = { _, info, _, _, _, _ in
 }
 
 public final class SessionStore {
+    public static let ttl: TimeInterval = 15 * 60
+    public static let readyTtl: TimeInterval = 10
+
     public private(set) var records: [SessionRecord] = []
     public var onChange: (() -> Void)?
 
     private var stream: FSEventStreamRef?
     private var sweepTimer: Timer?
-    private let ttl: TimeInterval = 15 * 60
+    private var readyTimer: Timer?
 
     public init() {}
+
+    public static func isRecordActive(_ rec: SessionRecord, now: TimeInterval = Date().timeIntervalSince1970) -> Bool {
+        let st = UniversalAgentState.normalize(rec.state)
+        if st == .inactive { return false }
+        let age = now - rec.ts
+        if age < 0 { return true }
+        if st == .ready || st == .stopped {
+            return age < readyTtl
+        }
+        return age < ttl
+    }
 
     public func start() {
         Paths.ensure()
@@ -109,6 +123,8 @@ public final class SessionStore {
         }
         sweepTimer?.invalidate()
         sweepTimer = nil
+        readyTimer?.invalidate()
+        readyTimer = nil
     }
 
     private func startWatching() {
@@ -142,8 +158,31 @@ public final class SessionStore {
                 }
             }
         }
-        found = found.filter { now - $0.ts < ttl }
+        found = found.filter { Self.isRecordActive($0, now: now) }
         let sorted = found.sorted { $0.ts > $1.ts }
+
+        readyTimer?.invalidate()
+        readyTimer = nil
+        var nextExpireIn: TimeInterval?
+        for rec in sorted {
+            let st = UniversalAgentState.normalize(rec.state)
+            if st == .ready || st == .stopped {
+                let remaining = Self.readyTtl - (now - rec.ts)
+                if remaining > 0 {
+                    if let cur = nextExpireIn {
+                        nextExpireIn = min(cur, remaining)
+                    } else {
+                        nextExpireIn = remaining
+                    }
+                }
+            }
+        }
+        if let nextExpireIn {
+            readyTimer = Timer.scheduledTimer(withTimeInterval: max(0.1, nextExpireIn), repeats: false) { [weak self] _ in
+                self?.rescan()
+            }
+        }
+
         if sorted != records {
             records = sorted
             onChange?()
@@ -157,7 +196,7 @@ public final class SessionStore {
             for url in files where url.pathExtension == "json" {
                 if let data = try? Data(contentsOf: url),
                    let rec = try? JSONDecoder().decode(SessionRecord.self, from: data),
-                   now - rec.ts >= ttl {
+                   !Self.isRecordActive(rec, now: now) {
                     try? fm.removeItem(at: url)
                 }
             }

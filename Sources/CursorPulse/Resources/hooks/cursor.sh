@@ -1,4 +1,5 @@
 #!/bin/bash
+# CursorPulse hook for Cursor IDE — $1 = mode (working | pre_tool | needs_approval | ready | idle).
 mode="$1"
 session="unknown"
 cwd=""
@@ -15,9 +16,11 @@ try:
     d = json.load(sys.stdin)
 except Exception:
     d = {}
-print("session=" + shlex.quote(str(d.get("conversationId") or d.get("sessionId") or "unknown")))
-paths = d.get("workspacePaths") or []
-print("cwd=" + shlex.quote(paths[0] if paths else str(d.get("workspace") or "")))
+session_val = d.get("conversation_id") or d.get("conversationId") or d.get("session_id") or d.get("sessionId") or d.get("sessionID") or "unknown"
+print("session=" + shlex.quote(str(session_val)))
+roots = d.get("workspace_roots") or d.get("workspaceRoots") or d.get("workspacePaths") or []
+cwd_val = roots[0] if roots else (d.get("cwd") or d.get("workspace") or "")
+print("cwd=" + shlex.quote(str(cwd_val)))
 ' 2>/dev/null)"
 fi
 
@@ -37,3 +40,7 @@ fi
 ts=$(date +%s)
 cat > "$file" <<EOF
 {"tool":"cursor","state":"${state}","ts":${ts},"cwd":"${cwd}","session":"${session}"}
+EOF
+
+echo '{"decision":"allow"}'
+exit 0

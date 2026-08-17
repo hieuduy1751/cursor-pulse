@@ -35,11 +35,17 @@ struct ClaudeInstaller: ToolInstaller {
             "command": "\(hookPath) stop",
             "timeout": 10,
         ]
+        let idleHandler: [String: Any] = [
+            "type": "command",
+            "command": "\(hookPath) idle",
+            "timeout": 5,
+        ]
         return [
             "UserPromptSubmit": [["hooks": [workingHandler]]],
             "PreToolUse": [["matcher": "*", "hooks": [preToolHandler]]],
             "PostToolUse": [["matcher": "*", "hooks": [workingHandler]]],
             "Stop": [["hooks": [stopHandler]]],
+            "SessionEnd": [["hooks": [idleHandler]]],
         ]
     }
 
