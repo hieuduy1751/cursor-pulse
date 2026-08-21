@@ -11,7 +11,9 @@ public enum AgentTool: String, CaseIterable, Codable, Equatable {
 
     public static func from(raw: String) -> AgentTool {
         let clean = raw.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        if clean.contains("antigravity") || clean.contains("agy") {
+        if let exact = AgentTool(rawValue: clean) {
+            return exact
+        } else if clean.contains("antigravity") || clean.contains("agy") {
             return .antigravity
         } else if clean.contains("codex") {
             return .codex
