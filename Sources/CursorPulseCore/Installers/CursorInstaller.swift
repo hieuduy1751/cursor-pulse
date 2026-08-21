@@ -1,22 +1,22 @@
-import CursorPulseCore
 import Foundation
 
-struct CursorInstaller: ToolInstaller {
-    var tool: String { "cursor" }
-    var displayName: String { "Cursor (IDE + Agent)" }
+public struct CursorInstaller: ToolInstaller {
+    public var tool: String { "cursor" }
+    public var displayName: String { "Cursor (IDE + Agent)" }
 
-    var postInstallNote: String? {
+    public var postInstallNote: String? {
         "Restart Cursor (or reopen workspace) to activate tracking hooks."
     }
 
-    private var hooksFile: URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".cursor")
-            .appendingPathComponent("hooks.json")
-    }
+    private let hooksFile: URL
+    private let hookPath: String
 
-    private var hookPath: String {
-        Paths.hooksDir.appendingPathComponent("cursor.sh").path
+    public init(hooksFile: URL? = nil, hooksDir: URL? = nil) {
+        self.hooksFile = hooksFile
+            ?? FileManager.default.homeDirectoryForCurrentUser
+                .appendingPathComponent(".cursor")
+                .appendingPathComponent("hooks.json")
+        self.hookPath = (hooksDir ?? Paths.hooksDir).appendingPathComponent("cursor.sh").path
     }
 
     private var targetHooks: [String: String] {
@@ -31,7 +31,7 @@ struct CursorInstaller: ToolInstaller {
         ]
     }
 
-    var isInstalled: Bool {
+    public var isInstalled: Bool {
         guard let obj = JSONFiles.load(hooksFile),
               let hooks = obj["hooks"] as? [String: Any] else { return false }
         if let arr = hooks["beforeSubmitPrompt"] as? [[String: Any]],
@@ -41,9 +41,9 @@ struct CursorInstaller: ToolInstaller {
         return false
     }
 
-    func install() {
+    public func install() {
         Paths.ensure()
-        guard HookScripts.materialize("cursor.sh", as: "cursor.sh", executable: true) != nil else { return }
+        guard HookScripts.materialize("cursor.sh", as: "cursor.sh", executable: true, hooksDir: hooksDir) != nil else { return }
         var obj = JSONFiles.load(hooksFile) ?? [:]
         obj["version"] = 1
         var hooks = obj["hooks"] as? [String: Any] ?? [:]
@@ -59,7 +59,7 @@ struct CursorInstaller: ToolInstaller {
         JSONFiles.save(hooksFile, obj)
     }
 
-    func uninstall() {
+    public func uninstall() {
         guard var obj = JSONFiles.load(hooksFile),
               var hooks = obj["hooks"] as? [String: Any] else { return }
         for event in targetHooks.keys {
@@ -74,5 +74,9 @@ struct CursorInstaller: ToolInstaller {
         }
         obj["hooks"] = hooks
         JSONFiles.save(hooksFile, obj)
+    }
+
+    private var hooksDir: URL {
+        URL(fileURLWithPath: hookPath).deletingLastPathComponent()
     }
 }

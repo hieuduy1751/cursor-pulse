@@ -1,11 +1,10 @@
-import CursorPulseCore
 import Foundation
 
-struct CodexInstaller: ToolInstaller {
-    var tool: String { "codex" }
-    var displayName: String { "Codex CLI" }
+public struct CodexInstaller: ToolInstaller {
+    public var tool: String { "codex" }
+    public var displayName: String { "Codex CLI" }
 
-    var postInstallNote: String? {
+    public var postInstallNote: String? {
         nil
     }
 
@@ -19,11 +18,16 @@ struct CodexInstaller: ToolInstaller {
         ]
     }
 
-    private var hooksFile: URL {
-        FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".codex/hooks.json")
-    }
+    private let hooksFile: URL
+    private let hookPath: String
+    private let codexConfigFile: URL
 
-    private var hookPath: String { Paths.hooksDir.appendingPathComponent("codex.sh").path }
+    public init(hooksFile: URL? = nil, hooksDir: URL? = nil, codexConfigFile: URL? = nil) {
+        self.hooksFile = hooksFile
+            ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".codex/hooks.json")
+        self.hookPath = (hooksDir ?? Paths.hooksDir).appendingPathComponent("codex.sh").path
+        self.codexConfigFile = codexConfigFile ?? CodexConfigToml.configPath
+    }
 
     private var events: [(event: String, state: String, matcher: String?, timeout: Int)] {
         [
@@ -49,7 +53,7 @@ struct CodexInstaller: ToolInstaller {
         return group
     }
 
-    var isInstalled: Bool {
+    public var isInstalled: Bool {
         guard let hooks = JSONFiles.load(hooksFile)?["hooks"] as? [String: Any] else { return false }
         return hooks.values.contains { value in
             guard let groups = value as? [[String: Any]] else { return false }
@@ -57,9 +61,9 @@ struct CodexInstaller: ToolInstaller {
         }
     }
 
-    func install() {
+    public func install() {
         Paths.ensure()
-        guard HookScripts.materialize("codex.sh", as: "codex.sh", executable: true) != nil else { return }
+        guard HookScripts.materialize("codex.sh", as: "codex.sh", executable: true, hooksDir: hooksDir) != nil else { return }
         var obj = JSONFiles.load(hooksFile) ?? [:]
         var hooks = obj["hooks"] as? [String: Any] ?? [:]
         var trustKeys: [(key: String, hash: String)] = []
@@ -84,11 +88,11 @@ struct CodexInstaller: ToolInstaller {
         obj["hooks"] = hooks
         JSONFiles.save(hooksFile, obj)
         for entry in trustKeys {
-            CodexConfigToml.upsertHookState(key: entry.key, hash: entry.hash)
+            CodexConfigToml.upsertHookState(key: entry.key, hash: entry.hash, in: codexConfigFile)
         }
     }
 
-    func uninstall() {
+    public func uninstall() {
         var obj = JSONFiles.load(hooksFile) ?? [:]
         guard var hooks = obj["hooks"] as? [String: Any] else { return }
         var removedKeys: [String] = []
@@ -117,12 +121,16 @@ struct CodexInstaller: ToolInstaller {
             JSONFiles.save(hooksFile, obj)
         }
         if !removedKeys.isEmpty {
-            CodexConfigToml.removeHookState(keys: removedKeys)
+            CodexConfigToml.removeHookState(keys: removedKeys, in: codexConfigFile)
         }
     }
 
     private static func groupContains(_ marker: String, _ group: [String: Any]) -> Bool {
         guard let handlers = group["hooks"] as? [[String: Any]] else { return false }
         return handlers.contains { ($0["command"] as? String)?.contains(marker) == true }
+    }
+
+    private var hooksDir: URL {
+        URL(fileURLWithPath: hookPath).deletingLastPathComponent()
     }
 }

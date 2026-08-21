@@ -1,4 +1,5 @@
 import SwiftUI
+import CursorPulseCore
 
 @main
 enum CursorPulseMain {

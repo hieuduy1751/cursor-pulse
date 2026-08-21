@@ -1,34 +1,36 @@
-import CursorPulseCore
 import Foundation
 
-struct OpencodeInstaller: ToolInstaller {
-    var tool: String { "opencode" }
-    var displayName: String { "OpenCode" }
+public struct OpencodeInstaller: ToolInstaller {
+    public var tool: String { "opencode" }
+    public var displayName: String { "OpenCode" }
 
-    var postInstallNote: String? {
+    public var postInstallNote: String? {
         "Restart opencode (or start a new session) to load the plugin."
     }
 
     private let pluginEntry = "./plugins/cursorpulse.js"
 
-    private var configFile: URL {
-        FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".config/opencode/opencode.json")
-    }
+    private let configFile: URL
+    private let pluginFile: URL
+    private let hooksDir: URL
 
-    private var pluginFile: URL {
-        FileManager.default.homeDirectoryForCurrentUser
+    public init(configFile: URL? = nil, pluginFile: URL? = nil, hooksDir: URL? = nil) {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        self.configFile = configFile ?? home.appendingPathComponent(".config/opencode/opencode.json")
+        self.pluginFile = pluginFile ?? home
             .appendingPathComponent(".config/opencode/plugins/cursorpulse.js")
+        self.hooksDir = hooksDir ?? Paths.hooksDir
     }
 
-    var isInstalled: Bool {
+    public var isInstalled: Bool {
         guard FileManager.default.fileExists(atPath: pluginFile.path) else { return false }
         let entries = JSONFiles.load(configFile)?["plugin"] as? [String] ?? []
         return entries.contains(pluginEntry)
     }
 
-    func install() {
-        guard HookScripts.materialize("cursorpulse.opencode.js", as: "cursorpulse.js", executable: false) != nil,
-              let content = try? String(contentsOf: Paths.hooksDir.appendingPathComponent("cursorpulse.js"), encoding: .utf8)
+    public func install() {
+        guard HookScripts.materialize("cursorpulse.opencode.js", as: "cursorpulse.js", executable: false, hooksDir: hooksDir) != nil,
+              let content = try? String(contentsOf: hooksDir.appendingPathComponent("cursorpulse.js"), encoding: .utf8)
         else { return }
         try? FileManager.default.createDirectory(
             at: pluginFile.deletingLastPathComponent(), withIntermediateDirectories: true
@@ -44,7 +46,7 @@ struct OpencodeInstaller: ToolInstaller {
         JSONFiles.save(configFile, obj)
     }
 
-    func uninstall() {
+    public func uninstall() {
         try? FileManager.default.removeItem(at: pluginFile)
         guard var obj = JSONFiles.load(configFile) else { return }
         if var entries = obj["plugin"] as? [String] {
