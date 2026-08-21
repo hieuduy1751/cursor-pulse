@@ -214,6 +214,8 @@ final class CursorPulseState {
     func clearDebug() {
         SessionStore.report(tool: "debug", state: State.inactive, session: "debug")
         SessionStore.report(tool: "antigravity", state: State.inactive, session: "agy-1")
+        SessionStore.report(tool: "claude", state: State.inactive, session: "claude-1")
+        SessionStore.report(tool: "cursor", state: State.inactive, session: "cursor-1")
         SessionStore.report(tool: "codex", state: State.inactive, session: "codex-1")
     }
 }
