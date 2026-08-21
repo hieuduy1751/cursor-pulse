@@ -66,6 +66,7 @@ public final class UpdateManager: NSObject, URLSessionDownloadDelegate {
     public private(set) var currentVersion: String
 
     public let repo: String
+    private var downloadSession: URLSession?
     private var downloadTask: URLSessionDownloadTask?
     private var targetAsset: ReleaseAsset?
     private var downloadProgressHandler: ((Double) -> Void)?
@@ -162,8 +163,15 @@ public final class UpdateManager: NSObject, URLSessionDownloadDelegate {
         let sessionConfig = URLSessionConfiguration.default
         let session = URLSession(configuration: sessionConfig, delegate: self, delegateQueue: nil)
         let task = session.downloadTask(with: downloadURL)
+        self.downloadSession = session
         self.downloadTask = task
         task.resume()
+    }
+
+    private func finishDownloadSession() {
+        downloadTask = nil
+        downloadSession?.finishTasksAndInvalidate()
+        downloadSession = nil
     }
 
     // MARK: - URLSessionDownloadDelegate
@@ -176,16 +184,22 @@ public final class UpdateManager: NSObject, URLSessionDownloadDelegate {
     }
 
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
             self.status = .installing
             self.performUpdateSwap(tempZipURL: location)
+            if !self.status.isBusy {
+                self.finishDownloadSession()
+            }
         }
     }
 
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         if let error {
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
                 self.status = .failed(error: "Download failed: \(error.localizedDescription)")
+                self.finishDownloadSession()
             }
         }
     }
@@ -238,9 +252,21 @@ public final class UpdateManager: NSObject, URLSessionDownloadDelegate {
             # Clear quarantine attribute
             xattr -dr com.apple.quarantine "$NEW_APP" 2>/dev/null || true
 
-            # Replace app bundle
-            rm -rf "$TARGET_APP"
-            cp -R "$NEW_APP" "$TARGET_APP"
+            # Replace app bundle using renames only, so a failed step can be rolled back
+            # and the existing installation is never left half-copied.
+            if ! cp -R "$NEW_APP" "$TARGET_APP.update"; then
+                exit 1
+            fi
+            if [ -d "$TARGET_APP" ] && ! mv "$TARGET_APP" "$TARGET_APP.old"; then
+                rm -rf "$TARGET_APP.update"
+                exit 1
+            fi
+            if ! mv "$TARGET_APP.update" "$TARGET_APP"; then
+                [ -d "$TARGET_APP.old" ] && mv "$TARGET_APP.old" "$TARGET_APP"
+                rm -rf "$TARGET_APP.update"
+                exit 1
+            fi
+            rm -rf "$TARGET_APP.old"
 
             # Launch new app
             open -n "$TARGET_APP"
