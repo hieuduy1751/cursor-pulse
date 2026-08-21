@@ -3,7 +3,6 @@
 
 # 1. If invoked inside Cursor / VSCode / Superconductor environment, ignore completely.
 if [ -n "$CURSOR_PROJECT_DIR" ] || [ -n "$CURSOR_APP_VERSION" ] || [ -n "$CURSOR_VERSION" ] || [ -n "$CURSOR_USER_DATA_DIR" ] || [ -n "$SUPERCONDUCTOR_WORKTREE_PATH" ]; then
-  echo '{"decision":"allow"}'
   exit 0
 fi
 
@@ -65,7 +64,6 @@ fi
 
 # If invoked by Cursor or another IDE sharing Claude settings, ignore to prevent dual-tracking
 if [ "$is_foreign_caller" = "true" ]; then
-  echo '{"decision":"allow"}'
   exit 0
 fi
 
@@ -91,7 +89,6 @@ case "$mode" in
     ;;
   idle)
     rm -f "$file" 2>/dev/null
-    echo '{"decision":"allow"}'
     exit 0
     ;;
   *)
@@ -104,5 +101,4 @@ cat > "$file" <<EOF
 {"tool":"claude","state":"${state}","ts":${ts},"cwd":"${cwd}","session":"${session}"}
 EOF
 
-echo '{"decision":"allow"}'
 exit 0
