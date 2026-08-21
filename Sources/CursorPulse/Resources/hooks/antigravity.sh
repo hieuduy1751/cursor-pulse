@@ -67,10 +67,33 @@ case "$mode" in
     ;;
 esac
 
-ts=$(date +%s)
-cat > "$file" <<EOF
-{"tool":"antigravity","state":"${state}","ts":${ts},"cwd":"${cwd}","session":"${session}"}
+# Write the session record as properly escaped JSON via python3.
+# Fallback (no python3): embed only fixed internal strings, drop user data.
+write_record() {
+  if command -v python3 >/dev/null 2>&1; then
+    local json
+    json=$(TOOL="antigravity" STATE="$state" SESSION="$session" CWD="$cwd" TS="$(date +%s)" python3 -c '
+import json, os
+print(json.dumps({
+    "tool": os.environ.get("TOOL", "antigravity"),
+    "state": os.environ.get("STATE", "working"),
+    "ts": int(os.environ.get("TS", "0") or 0),
+    "cwd": os.environ.get("CWD", ""),
+    "session": os.environ.get("SESSION", "unknown"),
+}))' 2>/dev/null) || json=""
+    if [ -n "$json" ]; then
+      printf '%s\n' "$json" > "$file"
+      return
+    fi
+  fi
+  local ts
+  ts=$(date +%s)
+  cat > "$file" <<EOF
+{"tool":"antigravity","state":"${state}","ts":${ts},"cwd":"","session":"unknown"}
 EOF
+}
+
+write_record antigravity "$state" "$session" "$cwd"
 
 echo '{"decision":"allow"}'
 exit 0
