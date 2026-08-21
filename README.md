@@ -76,6 +76,10 @@ CursorPulse integrates via non-invasive Unix hooks and plugins with 1-click inst
 | **Codex CLI** | CLI | `~/.codex/hooks.json` + `config.toml` auto-trust | `UserPromptSubmit`/`PostToolUse` (working), `PermissionRequest` (needs input), `Stop`/`SessionEnd` (ready / idle) |
 | **OpenCode** | CLI / Agent | `~/.config/opencode/plugins/cursorpulse.js` | `session.status` (working), `permission.asked` (needs approval), `session.idle` (ready / idle) |
 
+> **Note (Claude Code)**: Claude Code has no dedicated permission hook, so the `PreToolUse` hook heuristically maps `Bash`, `Edit`, and `Write` tool calls to *Needs Approval*. If you auto-approve those tools in your settings, the badge may briefly show *Needs Approval* while work continues.
+
+> **Note (multi-agent)**: When several agents are active at once, the companion badge cycles through them once per second so each gets visibility. The menu bar popover always shows the full per-session breakdown.
+
 ---
 
 ## Features
@@ -148,7 +152,7 @@ agent-state-cursor/
 
 ### IPC & State Pipeline
 1. Hook scripts write lightweight JSON state files to `~/.cursorpulse/sessions/<tool>__<session>.json`.
-2. `SessionStore` watches the directory using macOS **FSEvents** for instant notification (<1ms latency).
+2. `SessionStore` watches the directory using macOS **FSEvents** for near-instant notification (~0.3s latency).
 3. `CursorPulseState` aggregates active records, prioritizing actionable states (`error`, `needsApproval`, `needsInput`) over background states (`working`, `queued`).
 4. An automated 15-minute TTL sweep cleans up stale sessions in the event of an unexpected process exit.
 
