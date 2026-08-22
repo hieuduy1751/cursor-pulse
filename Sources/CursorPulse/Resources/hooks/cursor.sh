@@ -1,5 +1,5 @@
 #!/bin/bash
-# CursorPulse hook for Cursor IDE — $1 = mode (working | pre_tool | needs_approval | ready | idle).
+# CursorPulse hook for Cursor IDE — $1 = mode (working | needs_approval | ready | idle).
 mode="$1"
 session="unknown"
 cwd=""

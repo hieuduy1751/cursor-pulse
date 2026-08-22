@@ -19,12 +19,15 @@ public struct CursorInstaller: ToolInstaller {
         self.hookPath = (hooksDir ?? Paths.hooksDir).appendingPathComponent("cursor.sh").path
     }
 
+    /// Events registered by older versions but no longer used; kept so
+    /// uninstall can clean stale entries left on existing machines.
+    private static let legacyEvents: Set<String> = ["preToolUse"]
+
     private var targetHooks: [String: String] {
         [
             "beforeSubmitPrompt": "\(hookPath) working",
             "beforeShellExecution": "\(hookPath) needs_approval",
             "afterFileEdit": "\(hookPath) working",
-            "preToolUse": "\(hookPath) pre_tool",
             "postToolUse": "\(hookPath) working",
             "stop": "\(hookPath) ready",
             "sessionEnd": "\(hookPath) idle",
@@ -62,7 +65,7 @@ public struct CursorInstaller: ToolInstaller {
     public func uninstall() {
         guard var obj = JSONFiles.load(hooksFile),
               var hooks = obj["hooks"] as? [String: Any] else { return }
-        for event in targetHooks.keys {
+        for event in Set(targetHooks.keys).union(Self.legacyEvents) {
             if var eventList = hooks[event] as? [[String: Any]] {
                 eventList.removeAll(where: { ($0["command"] as? String)?.contains("cursor.sh") == true })
                 if eventList.isEmpty {
