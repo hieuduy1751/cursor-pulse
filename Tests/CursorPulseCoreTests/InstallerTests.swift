@@ -98,15 +98,50 @@ final class InstallerTests: XCTestCase {
 
         installer.install()
         XCTAssertTrue(installer.isInstalled)
+        let obj = try XCTUnwrap(JSONFiles.load(hooksFile))
+        let installedHooks = try XCTUnwrap(obj["hooks"] as? [String: Any])
+        XCTAssertEqual(
+            Set(installedHooks.keys),
+            Set(["beforeSubmitPrompt", "beforeShellExecution", "afterFileEdit", "postToolUse", "stop", "sessionEnd"])
+        )
+
+        installer.uninstall()
+        XCTAssertFalse(installer.isInstalled)
+        let after = try XCTUnwrap(JSONFiles.load(hooksFile))
+        let hooks = try XCTUnwrap(after["hooks"] as? [String: Any])
+        let stop = try XCTUnwrap(hooks["stop"] as? [[String: Any]])
+        XCTAssertEqual(stop.count, 1)
+        let handlers = try XCTUnwrap(stop[0]["hooks"] as? [[String: Any]])
+        XCTAssertEqual(handlers[0]["command"] as? String, "/usr/bin/user_stop_hook.sh")
+    }
+
+    func testCursorUninstallCleansLegacyPreToolUseRegistration() throws {
+        try makeFixture("cursor.sh")
+        let hooksFile = sandbox.appendingPathComponent("cursor/hooks.json")
+        // Simulate a config created by an older version that registered preToolUse
+        // (Cursor hook entries are flat {"command": ...} objects).
+        JSONFiles.save(hooksFile, [
+            "hooks": ["preToolUse": [["command": "\(hooksDir.appendingPathComponent("cursor.sh").path) pre_tool"]]]
+        ])
+
+        let installer = CursorInstaller(hooksFile: hooksFile, hooksDir: hooksDir)
+        installer.install()
+        XCTAssertTrue(installer.isInstalled)
 
         installer.uninstall()
         XCTAssertFalse(installer.isInstalled)
         let obj = try XCTUnwrap(JSONFiles.load(hooksFile))
         let hooks = try XCTUnwrap(obj["hooks"] as? [String: Any])
-        let stop = try XCTUnwrap(hooks["stop"] as? [[String: Any]])
-        XCTAssertEqual(stop.count, 1)
-        let handlers = try XCTUnwrap(stop[0]["hooks"] as? [[String: Any]])
-        XCTAssertEqual(handlers[0]["command"] as? String, "/usr/bin/user_stop_hook.sh")
+        XCTAssertNil(hooks["preToolUse"], "legacy preToolUse entry must be removed on uninstall")
+        let residual = hooks.values.contains { value in
+            guard let groups = value as? [[String: Any]] else { return false }
+            return groups.contains { group in
+                ((group["hooks"] ?? group) as? [[String: Any]])?.contains {
+                    ($0["command"] as? String)?.contains("cursor.sh") == true
+                } == true
+            }
+        }
+        XCTAssertFalse(residual, "no cursor.sh entries may remain after uninstall")
     }
 
     // MARK: - AntigravityInstaller
@@ -153,6 +188,46 @@ final class InstallerTests: XCTestCase {
         XCTAssertFalse(installer.isInstalled)
         let cleanedToml = try String(contentsOf: configFile, encoding: .utf8)
         XCTAssertFalse(cleanedToml.contains("[hooks.state."))
+    }
+
+    func testCodexInstallMigratesStaleHookCommands() throws {
+        try makeFixture("codex.sh")
+        let hooksFile = sandbox.appendingPathComponent("codex/hooks.json")
+        let configFile = sandbox.appendingPathComponent("codex/config.toml")
+        let hookPath = hooksDir.appendingPathComponent("codex.sh").path
+
+        // Simulate an older install: Stop reported idle, permissions as waiting.
+        JSONFiles.save(hooksFile, [
+            "hooks": [
+                "Stop": [["hooks": [["type": "command", "command": "\(hookPath) idle", "timeout": 10]]]],
+                "PermissionRequest": [["matcher": "*", "hooks": [["type": "command", "command": "\(hookPath) waiting", "timeout": 10]]]],
+            ]
+        ])
+
+        let installer = CodexInstaller(hooksFile: hooksFile, hooksDir: hooksDir, codexConfigFile: configFile)
+        XCTAssertTrue(installer.isInstalled)
+
+        installer.install()
+        XCTAssertTrue(installer.isInstalled)
+
+        let obj = try XCTUnwrap(JSONFiles.load(hooksFile))
+        let hooks = try XCTUnwrap(obj["hooks"] as? [String: Any])
+
+        // Stale groups must be replaced in place, not duplicated.
+        let stopGroups = try XCTUnwrap(hooks["Stop"] as? [[String: Any]])
+        XCTAssertEqual(stopGroups.count, 1)
+        let stopHandlers = try XCTUnwrap(stopGroups[0]["hooks"] as? [[String: Any]])
+        XCTAssertEqual(stopHandlers[0]["command"] as? String, "\(hookPath) ready")
+
+        let permGroups = try XCTUnwrap(hooks["PermissionRequest"] as? [[String: Any]])
+        XCTAssertEqual(permGroups.count, 1)
+        let permHandlers = try XCTUnwrap(permGroups[0]["hooks"] as? [[String: Any]])
+        XCTAssertEqual(permHandlers[0]["command"] as? String, "\(hookPath) needs_approval")
+
+        // Trust hashes for the migrated commands are present.
+        let toml = try String(contentsOf: configFile, encoding: .utf8)
+        XCTAssertTrue(toml.contains("[hooks.state."))
+        XCTAssertTrue(toml.contains("trusted_hash = \"sha256:"))
     }
 
     // MARK: - OpencodeInstaller

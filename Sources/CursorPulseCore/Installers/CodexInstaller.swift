@@ -33,8 +33,8 @@ public struct CodexInstaller: ToolInstaller {
         [
             ("UserPromptSubmit", State.busy, nil, 10),
             ("PostToolUse", State.busy, "*", 10),
-            ("PermissionRequest", State.waiting, "*", 10),
-            ("Stop", State.idle, nil, 10),
+            ("PermissionRequest", State.needsApproval, "*", 10),
+            ("Stop", State.ready, nil, 10),
             ("SessionEnd", State.idle, nil, 2),
         ]
     }
@@ -69,8 +69,14 @@ public struct CodexInstaller: ToolInstaller {
         var trustKeys: [(key: String, hash: String)] = []
         for spec in events {
             var groups = hooks[spec.event] as? [[String: Any]] ?? []
-            if !groups.contains(where: { Self.groupContains(hookPath, $0) }) {
-                groups.append(group(state: spec.state, matcher: spec.matcher, timeout: spec.timeout))
+            let expected = group(state: spec.state, matcher: spec.matcher, timeout: spec.timeout)
+            // Replace an existing own-group in place so stale commands from
+            // older versions are migrated (and their trust hashes refreshed)
+            // without duplicating entries.
+            if let index = groups.lastIndex(where: { Self.groupContains(hookPath, $0) }) {
+                groups[index] = expected
+            } else {
+                groups.append(expected)
             }
             hooks[spec.event] = groups
             guard let label = eventLabels[spec.event],
