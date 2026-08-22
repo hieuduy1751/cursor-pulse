@@ -73,12 +73,14 @@ CursorPulse integrates via non-invasive Unix hooks and plugins with 1-click inst
 | **Antigravity** | IDE & AGY CLI | `~/.gemini/config/hooks.json` | `PreInvocation` (working), `PreToolUse` (needs approval / input), `PostToolUse` (working), `Stop` (ready / error) |
 | **Claude Code** | CLI | `~/.claude/settings.json` | `UserPromptSubmit` (working), `PreToolUse` (needs approval / input), `PostToolUse` (working), `Stop` (ready), `SessionEnd` (idle) |
 | **Cursor** | IDE & Agent | `~/.cursor/hooks.json` | `beforeSubmitPrompt` (working), `beforeShellExecution` (needs approval), `afterFileEdit` (working), `preToolUse` (needs approval), `stop` (ready), `sessionEnd` (idle) |
-| **Codex CLI** | CLI | `~/.codex/hooks.json` + `config.toml` auto-trust | `UserPromptSubmit`/`PostToolUse` (working), `PermissionRequest` (needs input), `Stop`/`SessionEnd` (ready / idle) |
-| **OpenCode** | CLI / Agent | `~/.config/opencode/plugins/cursorpulse.js` | `session.status` (working), `permission.asked` (needs approval), `session.idle` (ready / idle) |
+| **Codex CLI** | CLI | `~/.codex/hooks.json` + `config.toml` auto-trust | `UserPromptSubmit`/`PostToolUse` (working), `PermissionRequest` (needs approval), `Stop` (ready), `SessionEnd` (idle) |
+| **OpenCode** | CLI / Agent | `~/.config/opencode/plugins/cursorpulse.js` | `session.status` (working), `permission.asked` (needs approval), `session.error` (error), `session.idle` (ready / idle) |
 
 > **Note (Claude Code)**: Claude Code has no dedicated permission hook, so the `PreToolUse` hook heuristically maps `Bash`, `Edit`, and `Write` tool calls to *Needs Approval*. If you auto-approve those tools in your settings, the badge may briefly show *Needs Approval* while work continues.
 
 > **Note (multi-agent)**: When several agents are active at once, the companion badge cycles through them once per second so each gets visibility. The menu bar popover always shows the full per-session breakdown.
+
+> **Note (errors)**: The Claude Code and Cursor hook APIs expose no failure events, so `Error` states surface only for Antigravity and OpenCode.
 
 ---
 
