@@ -54,7 +54,9 @@ export const CursorPulsePlugin = async ({ directory, worktree }) => {
       } else if (event.type === "session.idle") {
         report(sessionID, "idle", cwd);
       } else if (event.type === "permission.asked") {
-        report(sessionID, "waiting", cwd);
+        report(sessionID, "needs_approval", cwd);
+      } else if (event.type === "session.error") {
+        report(sessionID, "error", cwd);
       }
     },
   };
