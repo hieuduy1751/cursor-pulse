@@ -184,14 +184,41 @@ public final class UpdateManager: NSObject, URLSessionDownloadDelegate {
     }
 
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            self.status = .installing
-            self.performUpdateSwap(tempZipURL: location)
-            if !self.status.isBusy {
-                self.finishDownloadSession()
+        // URLSession deletes `location` as soon as this delegate method returns,
+        // so the file must be moved into our own staging directory synchronously.
+        // Dispatching the move to another queue races the deletion and fails with
+        // "The file "CFNetworkDownload_…" couldn't be copied".
+        do {
+            let zipURL = try secureDownload(at: location)
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.status = .installing
+                self.performUpdateSwap(zipURL: zipURL)
+                if !self.status.isBusy {
+                    self.finishDownloadSession()
+                }
+            }
+        } catch {
+            DispatchQueue.main.async { [weak self] in
+                self?.status = .failed(error: "Installation error: \(error.localizedDescription)")
+                self?.finishDownloadSession()
             }
         }
+    }
+
+    /// Moves a completed download into a private staging directory as update.zip.
+    func secureDownload(at location: URL) throws -> URL {
+        let stagingDir = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("CursorPulseUpdate-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: stagingDir, withIntermediateDirectories: true)
+        let destination = stagingDir.appendingPathComponent("update.zip")
+        do {
+            try FileManager.default.moveItem(at: location, to: destination)
+        } catch {
+            // Cross-volume fallback; URLSession temp files are normally on the same volume.
+            try FileManager.default.copyItem(at: location, to: destination)
+        }
+        return destination
     }
 
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
@@ -204,24 +231,20 @@ public final class UpdateManager: NSObject, URLSessionDownloadDelegate {
         }
     }
 
-    private func performUpdateSwap(tempZipURL: URL) {
+    private func performUpdateSwap(zipURL: URL) {
         let fm = FileManager.default
-        let stagingDir = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("CursorPulseUpdate-\(UUID().uuidString)")
 
         do {
-            try fm.createDirectory(at: stagingDir, withIntermediateDirectories: true)
-            let destinationZip = stagingDir.appendingPathComponent("update.zip")
-            try fm.copyItem(at: tempZipURL, to: destinationZip)
-
             // Unzip using /usr/bin/ditto -xk
             let ditto = Process()
             ditto.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
-            ditto.arguments = ["-xk", destinationZip.path, stagingDir.path]
+            ditto.arguments = ["-xk", zipURL.path, zipURL.deletingLastPathComponent().path]
+
             try ditto.run()
             ditto.waitUntilExit()
 
             // Find extracted .app
-            let contents = try fm.contentsOfDirectory(at: stagingDir, includingPropertiesForKeys: nil)
+            let contents = try fm.contentsOfDirectory(at: zipURL.deletingLastPathComponent(), includingPropertiesForKeys: nil)
             guard let extractedApp = contents.first(where: { $0.pathExtension == "app" }) else {
                 status = .failed(error: "Update archive did not contain an application bundle.")
                 return
@@ -234,6 +257,7 @@ public final class UpdateManager: NSObject, URLSessionDownloadDelegate {
             }
 
             // Create detached updater script
+            let stagingDir = zipURL.deletingLastPathComponent()
             let updaterScript = stagingDir.appendingPathComponent("updater.sh")
             let scriptContent = """
             #!/bin/bash

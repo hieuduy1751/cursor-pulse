@@ -47,4 +47,24 @@ final class UpdateManagerTests: XCTestCase {
         XCTAssertEqual(release.assets.count, 1)
         XCTAssertEqual(release.assets[0].name, "CursorPulse-v0.1.1-mac-arm64.zip")
     }
+    func testSecureDownloadSurvivesSourceDeletion() throws {
+        // URLSession hands the delegate a temp file named like CFNetworkDownload_xxx.tmp
+        // and deletes it the moment didFinishDownloadingTo returns. Securing the file
+        // must therefore complete synchronously and stay valid after the source vanishes.
+        let tmp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("CFNetworkDownload_\(UUID().uuidString).tmp")
+        try Data("zip-bytes".utf8).write(to: tmp)
+        defer { try? FileManager.default.removeItem(at: tmp) }
+
+        let manager = UpdateManager(currentVersion: "0.0.1")
+        let secured = try manager.secureDownload(at: tmp)
+        defer { try? FileManager.default.removeItem(at: secured) }
+
+        // URLSession deletes whatever remains; a move-based capture leaves nothing.
+        if FileManager.default.fileExists(atPath: tmp.path) {
+            try FileManager.default.removeItem(at: tmp)
+        }
+        XCTAssertTrue(secured.lastPathComponent.hasSuffix(".zip"))
+        XCTAssertEqual(try Data(contentsOf: secured), Data("zip-bytes".utf8))
+    }
 }
