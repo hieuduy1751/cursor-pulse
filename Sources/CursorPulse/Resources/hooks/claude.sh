@@ -6,11 +6,29 @@ if [ -n "$CURSOR_PROJECT_DIR" ] || [ -n "$CURSOR_APP_VERSION" ] || [ -n "$CURSOR
   exit 0
 fi
 
+# 1b. Ancestry check: IDEs like Cursor import ~/.claude/settings.json and run
+# these hooks for their own agent runs. Walk the process tree and bail if any
+# ancestor belongs to such an app, regardless of env vars or payload shape.
+pid=$$
+for _ in 1 2 3 4 5 6; do
+  pid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
+  if [ -z "$pid" ] || [ "$pid" = "0" ] || [ "$pid" = "1" ]; then
+    break
+  fi
+  ancestor=$(ps -o comm= -p "$pid" 2>/dev/null)
+  case "$ancestor" in
+    *Cursor*|*cursor*|*Antigravity*|*antigravity*|*Superconductor*)
+      exit 0
+      ;;
+  esac
+done
+
 mode="$1"
 session="unknown"
 cwd=""
 tool_name=""
 is_foreign_caller="false"
+claude_identity="false"
 
 input_json=""
 if [ ! -t 0 ]; then
@@ -27,14 +45,14 @@ except Exception:
 
 # Check if this hook was invoked by Cursor / Antigravity / other IDEs importing Claude settings
 has_cursor_keys = bool(
-    d.get("hook_event_name") or 
-    d.get("hookEventName") or 
-    d.get("workspace_roots") or 
-    d.get("workspaceRoots") or 
-    d.get("generation_id") or 
-    d.get("generationId") or 
-    d.get("turn_id") or 
-    d.get("turnId") or 
+    d.get("hook_event_name") or
+    d.get("hookEventName") or
+    d.get("workspace_roots") or
+    d.get("workspaceRoots") or
+    d.get("generation_id") or
+    d.get("generationId") or
+    d.get("turn_id") or
+    d.get("turnId") or
     d.get("conversation_id") or
     d.get("conversationId")
 )
@@ -51,6 +69,8 @@ if has_cursor_keys and not has_claude_keys:
 else:
     print("is_foreign_caller=false")
 
+print("claude_identity=" + ("true" if has_claude_keys else "false"))
+
 session_val = d.get("session_id") or d.get("sessionId") or "unknown"
 print("session=" + shlex.quote(str(session_val)))
 roots = d.get("workspacePaths") or []
@@ -64,6 +84,14 @@ fi
 
 # If invoked by Cursor or another IDE sharing Claude settings, ignore to prevent dual-tracking
 if [ "$is_foreign_caller" = "true" ]; then
+  exit 0
+fi
+
+# 2. Require positive evidence of a genuine Claude Code / Claude Desktop
+# invocation (session_id, transcript_path, or claude-desktop entrypoint).
+# Real Claude hooks always provide one of these; IDE cross-invocations with
+# missing or reshaped payloads must never produce a "claude" badge state.
+if [ "$claude_identity" != "true" ]; then
   exit 0
 fi
 
