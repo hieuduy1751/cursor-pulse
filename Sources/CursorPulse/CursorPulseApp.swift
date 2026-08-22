@@ -25,7 +25,9 @@ enum CursorPulseMain {
             ClaudeInstaller(),
             CursorInstaller(),
             AntigravityInstaller(),
-            OpencodeInstaller()
+            OpencodeInstaller(),
+            PiInstaller(),
+            OmpInstaller()
         ]
         guard let toolName else {
             for installer in installers {

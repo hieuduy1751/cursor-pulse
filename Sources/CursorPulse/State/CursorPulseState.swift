@@ -112,7 +112,9 @@ final class CursorPulseState {
             ClaudeInstaller(),
             CursorInstaller(),
             AntigravityInstaller(),
-            OpencodeInstaller()
+            OpencodeInstaller(),
+            PiInstaller(),
+            OmpInstaller()
         ]
         self.installers = list
         var flags: [String: Bool] = [:]

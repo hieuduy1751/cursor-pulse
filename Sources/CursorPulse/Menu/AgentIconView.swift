@@ -35,6 +35,7 @@ public struct AgentIconView: View {
         case .claude: return Color(red: 0.85, green: 0.47, blue: 0.34)
         case .cursor: return .white
         case .opencode: return .white
+        case .pi, .omp: return .white
         case .debug: return Color(red: 0.95, green: 0.40, blue: 0.35)
         case .custom: return .white
         }
@@ -62,6 +63,8 @@ public struct AgentIconView: View {
         case .claude: name = "claude"
         case .cursor: name = "cursor"
         case .opencode: name = "opencode"
+        case .pi: name = "pi"
+        case .omp: name = "omp"
         case .debug, .custom: name = "antigravity"
         }
 

@@ -28,7 +28,7 @@
 **CursorPulse** is a lightweight macOS menu bar application that displays a live companion badge next to your mouse pointer while AI coding agents are working. It lets you know at a glance whether your agent is actively generating code, awaiting tool approval, waiting for your input, or finished — across multiple tools and concurrent sessions.
 
 - **Zero Accessibility Permissions Required**: The companion badge is a non-activating, click-through overlay window that tracks the pointer using Quartz mouse events (`NSEvent.mouseLocation`). It never intercepts, inspects, or records input.
-- **Multi-Agent Awareness**: Seamlessly tracks multiple sessions across Antigravity, Claude Code, Cursor, Codex, and OpenCode, automatically cycling through active agents.
+- **Multi-Agent Awareness**: Seamlessly tracks multiple sessions across Antigravity, Claude Code, Cursor, Codex, OpenCode, Pi, and Oh My Pi, automatically cycling through active agents.
 
 ---
 
@@ -58,9 +58,9 @@ brew install --cask --no-quarantine hieuduy1751/tap/cursor-pulse
 
 Download the latest `.dmg` or `.zip` installer from [GitHub Releases](https://github.com/hieuduy1751/cursor-pulse/releases/latest):
 
-- 🍏 **Apple Silicon (M1 / M2 / M3 / M4)**: [`CursorPulse-v0.2.1-mac-arm64.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.2.1/CursorPulse-v0.2.1-mac-arm64.dmg)
-- 💻 **Intel (x86_64)**: [`CursorPulse-v0.2.1-mac-x64.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.2.1/CursorPulse-v0.2.1-mac-x64.dmg)
-- ⚡️ **Universal (Dual Arch)**: [`CursorPulse-v0.2.1-mac-universal.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.2.1/CursorPulse-v0.2.1-mac-universal.dmg)
+- 🍏 **Apple Silicon (M1 / M2 / M3 / M4)**: [`CursorPulse-v0.3.0-mac-arm64.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.3.0/CursorPulse-v0.3.0-mac-arm64.dmg)
+- 💻 **Intel (x86_64)**: [`CursorPulse-v0.3.0-mac-x64.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.3.0/CursorPulse-v0.3.0-mac-x64.dmg)
+- ⚡️ **Universal (Dual Arch)**: [`CursorPulse-v0.3.0-mac-universal.dmg`](https://github.com/hieuduy1751/cursor-pulse/releases/download/v0.3.0/CursorPulse-v0.3.0-mac-universal.dmg)
 
 ---
 
@@ -75,12 +75,14 @@ CursorPulse integrates via non-invasive Unix hooks and plugins with 1-click inst
 | **Cursor** | IDE & Agent | `~/.cursor/hooks.json` | `beforeSubmitPrompt` (working), `beforeShellExecution` (needs approval), `afterFileEdit` (working), `preToolUse` (needs approval), `stop` (ready), `sessionEnd` (idle) |
 | **Codex CLI** | CLI | `~/.codex/hooks.json` + `config.toml` auto-trust | `UserPromptSubmit`/`PostToolUse` (working), `PermissionRequest` (needs approval), `Stop` (ready), `SessionEnd` (idle) |
 | **OpenCode** | CLI / Agent | `~/.config/opencode/plugins/cursorpulse.js` | `session.status` (working), `permission.asked` (needs approval), `session.error` (error), `session.idle` (ready / idle) |
+| **Pi Coding Agent** | CLI | `~/.pi/agent/extensions/cursorpulse.ts` | agent/turn events (working), `bash`/`edit`/`write` tool calls (needs approval), `ask` tool calls (needs input), queued follow-ups (queued), provider HTTP failures (error), `agent_settled` (ready) |
+| **Oh My Pi** | CLI | `~/.omp/agent/extensions/cursorpulse.ts` | agent/turn events (working), approval prompts via `tool_approval_requested` (needs approval), `ask` tool calls (needs input), queued messages (queued), provider HTTP failures (error), settle events (ready) |
 
 > **Note (Claude Code)**: Claude Code has no dedicated permission hook, so the `PreToolUse` hook heuristically maps `Bash`, `Edit`, and `Write` tool calls to *Needs Approval*. If you auto-approve those tools in your settings, the badge may briefly show *Needs Approval* while work continues.
 
 > **Note (multi-agent)**: When several agents are active at once, the companion badge cycles through them once per second so each gets visibility. The menu bar popover always shows the full per-session breakdown.
 
-> **Note (errors)**: The Claude Code and Cursor hook APIs expose no failure events, so `Error` states surface only for Antigravity and OpenCode.
+> **Note (errors)**: The Claude Code and Cursor hook APIs expose no failure events, so `Error` states surface only for Antigravity, OpenCode, Pi, and Oh My Pi.
 
 ---
 
@@ -141,6 +143,7 @@ agent-state-cursor/
 │   │   │   ├── CodexInstaller.swift
 │   │   │   ├── CodexConfigToml.swift
 │   │   │   ├── OpencodeInstaller.swift
+│   │   │   ├── AgentExtensionInstallers.swift  # Pi & Oh My Pi extension installers
 │   │   │   └── Installer.swift
 │   │   └── Resources/
 │   │       ├── hooks/                 # Bundled shell scripts & JS plugins
@@ -181,7 +184,7 @@ You can manage hook installations directly from the command line:
 .build/release/CursorPulse --status
 
 # Install or uninstall hooks for a specific tool
-.build/release/CursorPulse --install antigravity    # antigravity | claude | cursor | codex | opencode
+.build/release/CursorPulse --install antigravity    # antigravity | claude | cursor | codex | opencode | pi | omp
 .build/release/CursorPulse --uninstall claude
 ```
 

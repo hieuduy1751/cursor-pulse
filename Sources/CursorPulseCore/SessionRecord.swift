@@ -6,6 +6,8 @@ public enum AgentTool: String, CaseIterable, Codable, Equatable {
     case claude = "claude"
     case cursor = "cursor"
     case opencode = "opencode"
+    case pi = "pi"
+    case omp = "omp"
     case debug = "debug"
     case custom = "custom"
 
@@ -21,6 +23,10 @@ public enum AgentTool: String, CaseIterable, Codable, Equatable {
             return .claude
         } else if clean.contains("cursor") {
             return .cursor
+        } else if clean.contains("oh my pi") || clean.contains("oh-my-pi") || clean.contains("ohmy") {
+            return .omp
+        } else if clean == "pi" {
+            return .pi
         } else if clean.contains("opencode") {
             return .opencode
         } else if clean.contains("debug") {
@@ -33,6 +39,8 @@ public enum AgentTool: String, CaseIterable, Codable, Equatable {
     public var systemImage: String {
         switch self {
         case .antigravity: return "atom"
+        case .pi: return "number"
+        case .omp: return "command"
         case .codex: return "terminal.fill"
         case .claude: return "sparkles"
         case .cursor: return "chevron.right.square.fill"
@@ -44,6 +52,8 @@ public enum AgentTool: String, CaseIterable, Codable, Equatable {
 
     public var displayName: String {
         switch self {
+        case .pi: return "Pi Coding Agent"
+        case .omp: return "Oh My Pi"
         case .antigravity: return "Antigravity"
         case .codex: return "Codex CLI"
         case .claude: return "Claude Code"

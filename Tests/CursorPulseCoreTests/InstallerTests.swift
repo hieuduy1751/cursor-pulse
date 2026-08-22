@@ -251,6 +251,70 @@ final class InstallerTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: pluginFile.path))
     }
 
+    // MARK: - PiInstaller
+
+    func testPiInstallRoundTrip() throws {
+        try makeFixture("cursorpulse.agent.ts", content: "const TOOL = \"@@TOOL@@\";\nexport default (pi: any) => {};\n")
+        let agentDir = sandbox.appendingPathComponent("pihome/agent")
+        let extensionFile = agentDir.appendingPathComponent("extensions/cursorpulse.ts")
+
+        let installer = PiInstaller(agentDir: agentDir, hooksDir: hooksDir)
+        XCTAssertFalse(installer.isInstalled)
+
+        installer.install()
+        XCTAssertTrue(installer.isInstalled)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: extensionFile.path))
+        let content = try String(contentsOf: extensionFile, encoding: .utf8)
+        XCTAssertFalse(content.contains("@@TOOL@@"), "tool placeholder must be substituted")
+        XCTAssertTrue(content.contains("\"pi\""), "extension must report tool name pi")
+
+        installer.uninstall()
+        XCTAssertFalse(installer.isInstalled)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: extensionFile.path))
+    }
+
+    // MARK: - OmpInstaller
+
+    func testOmpInstallRoundTrip() throws {
+        let agentDir = sandbox.appendingPathComponent("omphome/agent")
+        let extensionFile = agentDir.appendingPathComponent("extensions/cursorpulse.ts")
+        try makeFixture("cursorpulse.agent.ts", content: "const TOOL = \"@@TOOL@@\";\nexport default (pi: any) => {};\n")
+
+        let installer = OmpInstaller(agentDir: agentDir, hooksDir: hooksDir)
+        XCTAssertFalse(installer.isInstalled)
+
+        installer.install()
+        XCTAssertTrue(installer.isInstalled)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: extensionFile.path))
+        let content = try String(contentsOf: extensionFile, encoding: .utf8)
+        XCTAssertFalse(content.contains("@@TOOL@@"), "tool placeholder must be substituted")
+        XCTAssertTrue(content.contains("\"omp\""), "extension must report tool name omp")
+
+        installer.uninstall()
+        XCTAssertFalse(installer.isInstalled)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: extensionFile.path))
+    }
+
+    func testOmpInstallCoversExistingProfiles() throws {
+        try makeFixture("cursorpulse.agent.ts", content: "export default (pi: any) => {};\n")
+        let agentDir = sandbox.appendingPathComponent("omphome/agent")
+        let profileAgentDir = sandbox.appendingPathComponent("omphome/profiles/work/agent")
+        try FileManager.default.createDirectory(
+            at: profileAgentDir.appendingPathComponent("extensions"), withIntermediateDirectories: true
+        )
+        try makeFixture("cursorpulse.agent.ts", content: "const TOOL = \"@@TOOL@@\";\nexport default (pi: any) => {};\n")
+        let installer = OmpInstaller(agentDir: agentDir, hooksDir: hooksDir, profileAgentDirs: [profileAgentDir])
+        installer.install()
+        XCTAssertTrue(FileManager.default.fileExists(
+            atPath: profileAgentDir.appendingPathComponent("extensions/cursorpulse.ts").path
+        ))
+
+        installer.uninstall()
+        XCTAssertFalse(FileManager.default.fileExists(
+            atPath: profileAgentDir.appendingPathComponent("extensions/cursorpulse.ts").path
+        ))
+    }
+ 
     // MARK: - HookScripts.deploy
 
     func testDeployMakesScriptsExecutable() throws {
