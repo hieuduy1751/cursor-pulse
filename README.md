@@ -110,6 +110,9 @@ Personalize the color palette for each of the 8 universal agent states using nat
 ### 4. Open at Login / Startup
 Integrated with Apple's `ServiceManagement` (`SMAppService`) framework. Toggle **Open at Login** with a single switch to have CursorPulse automatically launch when logging into macOS.
 
+### 5. Automatic Hook Sync on Update
+On launch with a new app version, CursorPulse automatically refreshes hook scripts, registrations, and Codex trust hashes for every integration you have already installed — no manual reinstalling required. Integrations you explicitly uninstalled are never re-enabled.
+
 ---
 
 ## Architecture
